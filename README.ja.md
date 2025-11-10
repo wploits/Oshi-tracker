@@ -24,7 +24,7 @@
   * 推しがポストを削除（または非公開）にした場合、**その内容をDiscordに通知します。**
 
 ### 📡 サポートされているプラットフォーム
-* **ライブ配信**: YouTube, Twitch, ニコニコ(ニコ生), TikTok, Openrec, KICK
+* **ライブ配信**: YouTube, Twitch, ニコニコ(ニコ生), TikTok, Openrec, KICK, ツイキャス
 * **ポスト**: X (旧Twitter)
 
 ---
@@ -179,6 +179,43 @@ DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1234567890/xxxxxxxxxxxx_
 
 黒い画面（コンソール）が起動し、設定した全アカウントの監視が開始されます。
 あとはこの画面を開いたままにしておけば、推しが活動するたびにDiscordに通知が届きます！
+
+---
+
+## 🔴 配信の自動録画機能
+
+`main.py` の中盤にある`Config`クラスにすべて詰まっています :)
+
+### オンオフトグル
+
+```python
+class Config:
+    DEBUG_LOGGING = False
+    ENABLE_AUTO_RECORDING = False # ← ここ！！！！ Falseでオフ、Trueでオン
+```
+
+### 録画対象設定
+
+```python
+class Config:
+    # (...省略...)
+    RECORDING_TARGET_PLATFORMS = [
+        #NOTIF_PLATFORM_TIKTOK,
+        #NOTIF_PLATFORM_NICONICO,
+        #NOTIF_PLATFORM_YOUTUBE,
+        #NOTIF_PLATFORM_TWITCH,
+        #NOTIF_PLATFORM_OPENREC,
+        #NOTIF_PLATFORM_KICK,
+        #NOTIF_PLATFORM_TWITCASTING
+    ]
+    # (...省略...)
+```
+
+上記の部分(RECORDING_TARGET_PLATFORMSの中)にある#を消すとそのプラットフォームの自動録画をオンにします！
+
+(オフにしたい場合は、#を付けなおす または その行を削除する。行を削除してからもう一度追加したい場合は、このreadmeを参考にしてプラットフォームを追加する。)
+
+---
 
 ---
 
