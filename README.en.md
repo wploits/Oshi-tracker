@@ -162,6 +162,8 @@ A console window will open, and monitoring for all your configured accounts will
 
 ## 🔴 Automatic Stream Recording
 
+It's all in the `Config` class, located in the middle of `main.py` :)
+
 ### Enable/Disable Toggle
 
 ```python
