@@ -1,6 +1,5 @@
 # Oshi-tracker
 
-![GitHub stats](https://github-readme-stats.vercel.app/api?username=wploits&repo=Oshi-tracker&show_icons=true)
 ![License](https://img.shields.io/github/license/wploits/Oshi-tracker.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/wploits/Oshi-tracker.svg)
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=wploits.Oshi-tracker)
