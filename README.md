@@ -9,12 +9,17 @@
 ### 💖 Star the project! / このプロジェクトにスターをお願いします！
 
 [![GitHub stars](https://img.shields.io/github/stars/wploits/Oshi-tracker.svg?style=social&label=Star)](https://github.com/wploits/Oshi-tracker/stargazers)
+
 > 気に入っていただけたら、ぜひスター(⭐)をお願いします！モチベーションに繋がります！
 > If you like this project, please give it a star (⭐)! It helps with motivation!
 
 ---
 
+## 🌎 Language / 言語
+
 **🇯🇵 [日本語](./README.ja.md)** | **🇺🇸 [English](./README.en.md)**
+
+---
 
 > The "Stream / X tracker" for your "推し活(Oshi-katsu)" !
 
