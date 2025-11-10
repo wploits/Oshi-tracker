@@ -1,9 +1,25 @@
 # Oshi-tracker
 
-**🇯🇵 [日本語](./README.ja.md)**
-
-**🇺🇸 [English](./README.en.md)**
+**🇯🇵 [日本語](./README.ja.md)** | **🇺🇸 [English](./README.en.md)**
 
 ---
 
-The "Stream / X tracker" for your "推し活(Oshi-katsu)" !
+> The "Stream / X tracker" for your "推し活(Oshi-katsu)" !
+
+## Credit / クレジット
+
+**🇯🇵**
+開発者: [あなたの名前 または ハンドル名]
+(注意: このツールの一部のコードは、AIの支援を受けて書かれています。)
+
+**🇺🇸**
+Developer: [Your Name or Handle]
+(Note: Some code in this tool was written with the assistance of AI.)
+
+## License / ライセンス
+
+**🇯🇵**
+このプロジェクトは [MIT License](./LICENSE) の下でライセンスされています。
+
+**🇺🇸**
+This project is licensed under the [MIT License](./LICENSE).
