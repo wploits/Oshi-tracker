@@ -5,6 +5,8 @@
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=wploits.Oshi-tracker)
 ![GitHub stars](https://img.shields.io/github/stars/wploits/Oshi-tracker.svg?style=social&label=Star)
 
+## 💖 Star the project! / このプロジェクトにスターをお願いします！
+
 **🇯🇵 [日本語](./README.ja.md)** | **🇺🇸 [English](./README.en.md)**
 
 ---
