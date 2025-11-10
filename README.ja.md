@@ -128,24 +128,28 @@
 TIKTOK_TARGET_USERNAMES = ["neymarjr"]
 
 # 監視したいニコ生のユーザーID (https://www.nicovideo.jp/user/XXXX の数字)
-# 例: https://www.nicovideo.jp/user/131666408 の場合
-NICONICO_TARGET_USER_IDS = ["131666408"]
+# 例: https://www.nicovideo.jp/user/33618224 の場合
+NICONICO_TARGET_USER_IDS = ["33618224"]
 
 # 監視したいYouTubeの@ユーザー名（@は不要）
 # 例: https://www.youtube.com/@MrBeast の場合
 YOUTUBE_TARGET_USERNAMES = ["MrBeast"]
 
 # 監視したいTwitchのユーザー名
-# 例: https://www.twitch.tv/ninja の場合
-TWITCH_TARGET_USERNAMES = ["ninja"]
+# 例: https://www.twitch.tv/kun_50 の場合
+TWITCH_TARGET_USERNAMES = ["kun_50"]
 
 # 監視したいOpenrecのユーザー名
-# 例: https://www.openrec.tv/user/warabarin の場合
-OPENREC_TARGET_USERNAMES = ["warabarin"]
+# 例: https://www.openrec.tv/user/mokouliszt_or の場合
+OPENREC_TARGET_USERNAMES = ["mokouliszt_or"]
 
 # 監視したいKickのユーザー名
 # 例: https://kick.com/adinross の場合
 KICK_TARGET_USERNAMES = ["adinross"]
+
+# 監視したいツイキャスのユーザー名
+# 例: https://twitcasting.tv/korekore_ch の場合
+TWITCASTING_TARGET_USERNAMES = [korekore_ch]
 
 # 監視したいXのRSSHub URL
 # "http://localhost:1200/twitter/user/Xのユーザー名"
