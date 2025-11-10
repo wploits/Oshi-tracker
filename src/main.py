@@ -25,48 +25,48 @@ class Config:
     DEBUG_LOGGING = False
 
     APP_TITLE = "--- Oshi-tracker ---"
-    LOG_STARTUP = "--- トラッカー 起動 ---"
-    LOG_SHUTDOWN = "--- トラッカー 正常終了 ---"
-    CONSOLE_SHUTDOWN = "\n--- システムを終了します ---"
-    CONSOLE_CACHE_SAVED = "キャッシュを保存しました。"
+    LOG_STARTUP = "--- Tracker Startup ---"
+    LOG_SHUTDOWN = "--- Tracker Shutdown Successful ---"
+    CONSOLE_SHUTDOWN = "\n--- Shutting Down System ---"
+    CONSOLE_CACHE_SAVED = "Cache Saved."
     
-    CONSOLE_LIVE_CYCLE = f"[{Colors.GRAY}--- Live 監視サイクル ---{Colors.END}]"
-    CONSOLE_X_CYCLE = f"[{Colors.GRAY}--- X (RSSHub) 監視サイクル ---{Colors.END}]"
-    CONSOLE_FOOTER = "\n{gray}({time_str} @ X:{x_interval}s / Live:{live_interval}s / Ctrl+Cで終了){end}"
+    CONSOLE_LIVE_CYCLE = f"[{Colors.GRAY}--- Live Monitoring Cycle ---{Colors.END}]"
+    CONSOLE_X_CYCLE = f"[{Colors.GRAY}--- X (RSSHub) Monitoring Cycle ---{Colors.END}]"
+    CONSOLE_FOOTER = "\n{gray}({time_str} @ X:{x_interval}s / Live:{live_interval}s / Press Ctrl+C to Exit){end}"
     
     CONSOLE_LIVE_PREFIX = f"[{Colors.GREEN}● LIVE{Colors.END}]"
     CONSOLE_OFF_PREFIX = f"[{Colors.RED}■ OFF{Colors.END}]"
     CONSOLE_RSS_PREFIX = f"[{Colors.BLUE}● RSS{Colors.END}]"
     CONSOLE_RSS_PAUSED_PREFIX = f"[{Colors.GRAY}● RSS{Colors.END}]"
 
-    STATUS_SERVICE_DISABLED = "(無効)"
-    STATUS_X_PAUSED = "配信中 (停止)"
-    STATUS_X_MONITORING = "監視中 ({count}件)"
-    STATUS_X_ERROR = "エラー"
+    STATUS_SERVICE_DISABLED = "(Disabled)"
+    STATUS_X_PAUSED = "Streaming (Paused)"
+    STATUS_X_MONITORING = "Monitoring ({count} posts)"
+    STATUS_X_ERROR = "Error"
     
-    STATUS_TITLE_UNKNOWN = "タイトル不明"
-    STATUS_BODY_UNKNOWN = "本文不明"
+    STATUS_TITLE_UNKNOWN = "Title Unknown"
+    STATUS_BODY_UNKNOWN = "Body Unknown"
 
-    NOTIF_LIVE_START = "@everyone\n@everyone\n{name} の{platform}配信が始まった！！！！！"
-    NOTIF_LIVE_END = "({name} の{platform}配信が終わった。)"
+    NOTIF_LIVE_START = "@everyone\n@everyone\n{name}'s {platform} stream has started!!!!!"
+    NOTIF_LIVE_END = "({name}'s {platform} stream has ended.)"
     
     NOTIF_PLATFORM_TIKTOK = "TikTok"
-    NOTIF_PLATFORM_NICONICO = "ニコ生"
+    NOTIF_PLATFORM_NICONICO = "Nico Live"
     NOTIF_PLATFORM_YOUTUBE = "YouTube"
     NOTIF_PLATFORM_TWITCH = "Twitch"
     NOTIF_PLATFORM_OPENREC = "Openrec"
     NOTIF_PLATFORM_KICK = "Kick"
 
-    NOTIF_POST_DELETED_TITLE = "【削除検知】{title}"
-    NOTIF_POST_DELETED_DESC = "このPostは削除されたか、非公開になりました。\n\n**▼ 削除前の本文 ▼**\n{desc}"
+    NOTIF_POST_DELETED_TITLE = "[Deletion Detected] {title}"
+    NOTIF_POST_DELETED_DESC = "This Post was deleted or made private.\n\n**▼ Original Post Body ▼**\n{desc}"
     
-    LOG_X_PAUSE = "-> {name} (@{account_id}) の監視を一時停止 (いずれかの配信中のため)"
+    LOG_X_PAUSE = "-> Pausing monitoring for {name} (@{account_id}) (Due to an ongoing live stream)"
 
 TIKTOK_TARGET_USERNAMES = ["neymarjr"]
-NICONICO_TARGET_USER_IDS = ["131666408"]
+NICONICO_TARGET_USER_IDS = ["33618224"]
 YOUTUBE_TARGET_USERNAMES = ["MrBeast"]
-TWITCH_TARGET_USERNAMES = ["ninja"]
-OPENREC_TARGET_USERNAMES = ["warabarin"]
+TWITCH_TARGET_USERNAMES = ["kun_50"]
+OPENREC_TARGET_USERNAMES = ["mokouliszt_or"]
 KICK_TARGET_USERNAMES = ["adinross"]
 
 X_TARGET_URLS = [
@@ -92,7 +92,7 @@ LOG_FILE = "./datas/tracker_log.txt"
 niconico_headers = {"X-Frontend-Id": "6"}
 browser_headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept-Language": "ja-JP,ja;q=0.9"
+    "Accept-Language": "en-US,en;q=0.9"
 }
 
 pygame.mixer.init()
@@ -107,7 +107,7 @@ def write_log(message, debug=False):
         with open(LOG_FILE, 'a', encoding='utf-8') as f:
             f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}\n")
     except Exception as e:
-        print(f"[{Colors.RED}ログ書き込みエラー{Colors.END}] {e}")
+        print(f"[{Colors.RED}Log Write Error{Colors.END}] {e}")
 
 def play_sound(file_path):
     if file_path and os.path.exists(file_path):
@@ -115,11 +115,11 @@ def play_sound(file_path):
             pygame.mixer.music.load(file_path)
             pygame.mixer.music.play()
         except Exception as e:
-            log_msg = f"[{Colors.RED}音再生エラー{Colors.END}] {e}"
+            log_msg = f"[{Colors.RED}Sound Playback Error{Colors.END}] {e}"
             print(log_msg)
             write_log(log_msg)
     elif file_path:
-        log_msg = f"[{Colors.RED}音声ファイルが見つかりませんでした{Colors.END}] {file_path}"
+        log_msg = f"[{Colors.RED}Sound File Not Found{Colors.END}] {file_path}"
         print(log_msg)
         write_log(log_msg)
 
@@ -132,7 +132,7 @@ def load_cache():
         with open(CACHE_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        log_msg = f"[{Colors.RED}キャッシュロードエラー{Colors.END}] {e}"
+        log_msg = f"[{Colors.RED}Cache Load Error{Colors.END}] {e}"
         print(log_msg)
         write_log(log_msg)
         return {}
@@ -143,7 +143,7 @@ def save_cache(cache):
         with open(CACHE_FILE, 'w', encoding='utf-8') as f:
             json.dump(cache, f, indent=4)
     except Exception as e:
-        log_msg = f"[{Colors.RED}キャッシュ保存エラー{Colors.END}] {e}"
+        log_msg = f"[{Colors.RED}Cache Save Error{Colors.END}] {e}"
         print(log_msg)
         write_log(log_msg)
 
@@ -151,7 +151,7 @@ def download_media(url, is_video=False):
     downloaded_files = []
     
     if is_video:
-        print(f"-> yt-dlpでDL: {url}")
+        print(f"-> DL with yt-dlp: {url}")
         try:
             cmd = ["yt-dlp", "--cookies", COOKIE_FILE_PATH, "-o", "%(id)s.%(ext)s", url]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, check=True, encoding='utf-8', errors='ignore')
@@ -169,23 +169,23 @@ def download_media(url, is_video=False):
                 if match and os.path.exists(match.group(1)):
                     downloaded_files.append(match.group(1))
 
-            print(f"-> yt-dlp成功: {downloaded_files}")
+            print(f"-> yt-dlp Success: {downloaded_files}")
             
         except subprocess.CalledProcessError as e:
-            log_msg = f"[{Colors.RED}yt-dlpエラー{Colors.END}] {e.stderr}"
+            log_msg = f"[{Colors.RED}yt-dlp Error{Colors.END}] {e.stderr}"
             print(log_msg)
             write_log(log_msg)
         except FileNotFoundError:
-             log_msg = f"[{Colors.RED}yt-dlpエラー{Colors.END}] yt-dlpがインストールされていません。"
+             log_msg = f"[{Colors.RED}yt-dlp Error{Colors.END}] yt-dlp is not installed."
              print(log_msg)
              write_log(log_msg)
         except Exception as e:
-            log_msg = f"[{Colors.RED}yt-dlp汎用エラー{Colors.END}] {e}"
+            log_msg = f"[{Colors.RED}yt-dlp General Error{Colors.END}] {e}"
             print(log_msg)
             write_log(log_msg)
             
     else: 
-        print(f"-> 画像DL: {url}")
+        print(f"-> Image DL: {url}")
         try:
             parsed_url = urlparse(url)
             path_filename = parsed_url.path.split('/')[-1]
@@ -212,10 +212,10 @@ def download_media(url, is_video=False):
             with open(filepath, 'wb') as f:
                 f.write(response.content)
             downloaded_files.append(filepath)
-            print(f"-> ダウンロード成功: {filepath}")
+            print(f"-> Download Success: {filepath}")
             
         except Exception as e:
-            log_msg = f"[{Colors.RED}ダウンロードエラー{Colors.END}] {e}"
+            log_msg = f"[{Colors.RED}Download Error{Colors.END}] {e}"
             print(log_msg)
             write_log(log_msg)
             
@@ -229,23 +229,23 @@ def send_live_notification(message, sound_file, url=None):
         print(f"-> LiveURL: {url}")
         notification_message = f"{message}\n{url}"
 
-    write_log(f"ライブ通知: {notification_message}")
+    write_log(f"Live Notification: {notification_message}")
     play_sound(sound_file)
     
     if DISCORD_WEBHOOK_URL:
         try:
             http_session.post(DISCORD_WEBHOOK_URL, json={"content": notification_message}, timeout=REQUEST_TIMEOUT_SECONDS)
         except Exception as e:
-            log_msg = f"[{Colors.RED}Webhookエラー{Colors.END}] {e}"
+            log_msg = f"[{Colors.RED}Webhook Error{Colors.END}] {e}"
             print(log_msg)
             write_log(log_msg)
 
 def send_post_notification(account_name, post_info, files_to_attach, color_hex, mention_everyone=False):
-    print(f"-> Discord通知送信: {account_name} - {post_info.get('title', 'N/A')}")
+    print(f"-> Sending Discord Notification: {account_name} - {post_info.get('title', 'N/A')}")
     play_sound(SOUND_MESSAGE_DETECTED)
     
     embed = {
-        "title": post_info.get('title', 'タイトルなし'),
+        "title": post_info.get('title', 'No Title'),
         "description": post_info.get('description_text', ''),
         "url": post_info.get('link', ''),
         "color": int(color_hex, 16),
@@ -265,7 +265,7 @@ def send_post_notification(account_name, post_info, files_to_attach, color_hex, 
             dt = datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %Z')
             embed["timestamp"] = dt.isoformat()
         except ValueError as e:
-            log_msg = f"[{Colors.RED}日付parseエラー{Colors.END}] {e} - {post_info['pubDate']}"
+            log_msg = f"[{Colors.RED}Date Parse Error{Colors.END}] {e} - {post_info['pubDate']}"
             print(log_msg)
             write_log(log_msg)
             pass
@@ -294,7 +294,7 @@ def send_post_notification(account_name, post_info, files_to_attach, color_hex, 
         response.raise_for_status()
         
     except Exception as e:
-        log_msg = f"[{Colors.RED}Webhookエラー{Colors.END}] {e}"
+        log_msg = f"[{Colors.RED}Webhook Error{Colors.END}] {e}"
         print(log_msg)
         write_log(log_msg)
     finally:
@@ -305,7 +305,7 @@ def send_post_notification(account_name, post_info, files_to_attach, color_hex, 
                 try:
                     os.remove(f)
                 except Exception as e:
-                    log_msg = f"[{Colors.RED}ファイル削除エラー{Colors.END}] {e}"
+                    log_msg = f"[{Colors.RED}File Deletion Error{Colors.END}] {e}"
                     print(log_msg)
                     write_log(log_msg)
 
@@ -354,22 +354,22 @@ def get_oldest_post_date(posts_map):
 
 def check_tiktok_live(username):
     url = f"https://www.tiktok.com/@{username}"
-    write_log(f"[TikTok DEBUG] @{username}: チェック開始", debug=True)
+    write_log(f"[TikTok DEBUG] @{username}: Starting check", debug=True)
     
     try:
         response = cffi_requests.get(url, headers=browser_headers, impersonate="chrome110", timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         html_content = response.text
-        write_log(f"[TikTok DEBUG] @{username}: HTML取得成功 (ステータス {response.status_code}, {len(html_content)} bytes)。", debug=True)
+        write_log(f"[TikTok DEBUG] @{username}: HTML fetched successfully (Status {response.status_code}, {len(html_content)} bytes).", debug=True)
 
         match = re.search(r'<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">(.*?)</script>', html_content)
         if not match:
-            log_msg = f"[{Colors.RED}TikTokエラー{Colors.END}] @{username}: データ(REHYDRATION)が見つかりません。"
+            log_msg = f"[{Colors.RED}TikTok Error{Colors.END}] @{username}: Data (REHYDRATION) not found."
             print(log_msg)
             write_log(log_msg)
             return False, None
         
-        write_log(f"[TikTok DEBUG] @{username}: JSON-LD scriptを発見。", debug=True)
+        write_log(f"[TikTok DEBUG] @{username}: JSON-LD script found.", debug=True)
         
         try:
             data = json.loads(match.group(1))
@@ -380,19 +380,19 @@ def check_tiktok_live(username):
             
             if user_info.get("roomId") and user_info.get("roomId") != "0":
                 live_url = f"https://www.tiktok.com/@{username}/live"
-                write_log(f"[TikTok DEBUG] @{username}: 'roomId' ({user_info.get('roomId')}) を発見。ライブ中と判断。", debug=True)
+                write_log(f"[TikTok DEBUG] @{username}: 'roomId' ({user_info.get('roomId')}) found. Assumed live.", debug=True)
 
-            write_log(f"[TikTok DEBUG] @{username}: チェック完了。 live_url={live_url}, display_name='{display_name}'", debug=True)
+            write_log(f"[TikTok DEBUG] @{username}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
             return live_url, display_name
             
         except json.JSONDecodeError:
-            log_msg = f"[{Colors.RED}TikTokエラー{Colors.END}] @{username}: JSON解析に失敗しました。"
+            log_msg = f"[{Colors.RED}TikTok Error{Colors.END}] @{username}: JSON parsing failed."
             print(log_msg)
             write_log(log_msg)
             return False, None
 
     except Exception as e:
-        log_msg = f"[{Colors.RED}TikTokエラー{Colors.END}] {e}"
+        log_msg = f"[{Colors.RED}TikTok Error{Colors.END}] {e}"
         print(log_msg)
         write_log(log_msg)
         return False, None
@@ -403,12 +403,12 @@ def check_niconico_live(user_id):
         f"{user_id}/publish"
         f"?context=user_timeline_{user_id}"
     )
-    write_log(f"[Niconico DEBUG] ID:{user_id}: チェック開始", debug=True)
+    write_log(f"[Nico Live DEBUG] ID:{user_id}: Starting check", debug=True)
     try:
         response = http_session.get(niconico_api_url, headers=niconico_headers, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         data = response.json()
-        write_log(f"[Niconico DEBUG] ID:{user_id}: API取得成功。", debug=True)
+        write_log(f"[Nico Live DEBUG] ID:{user_id}: API fetched successfully.", debug=True)
 
         display_name = None
         live_url = False
@@ -421,34 +421,34 @@ def check_niconico_live(user_id):
             if latest_activity_label == "LIVE":
                 live_url_path = latest_activity.get("content", {}).get("url", "")
                 live_url = live_url_path if live_url_path else True
-                write_log(f"[Niconico DEBUG] ID:{user_id}: 'LIVE' ラベルを発見。ライブ中と判断。", debug=True)
+                write_log(f"[Nico Live DEBUG] ID:{user_id}: 'LIVE' label found. Assumed live.", debug=True)
         
-        write_log(f"[Niconico DEBUG] ID:{user_id}: チェック完了。 live_url={live_url}, display_name='{display_name}'", debug=True)
+        write_log(f"[Nico Live DEBUG] ID:{user_id}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
         return live_url, display_name
 
     except Exception as e:
-        log_msg = f"[{Colors.RED}ニコ生エラー{Colors.END}] {e}"
+        log_msg = f"[{Colors.RED}Nico Live Error{Colors.END}] {e}"
         print(log_msg)
         write_log(log_msg)
         return False, None
 
 def check_youtube_live(username):
     url = f"https://www.youtube.com/@{username}"
-    write_log(f"[YouTube DEBUG] @{username}: チェック開始", debug=True)
+    write_log(f"[YouTube DEBUG] @{username}: Starting check", debug=True)
     try:
         response = cffi_requests.get(url, headers=browser_headers, impersonate="chrome110", timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         html_content = response.text
-        write_log(f"[YouTube DEBUG] @{username}: HTML取得成功 (ステータス {response.status_code}, {len(html_content)} bytes)。", debug=True)
+        write_log(f"[YouTube DEBUG] @{username}: HTML fetched successfully (Status {response.status_code}, {len(html_content)} bytes).", debug=True)
 
         match = re.search(r"var ytInitialData = ({.*?});</script>", html_content)
         if not match:
-            log_msg = f"[{Colors.RED}YouTubeエラー{Colors.END}] @{username}: ytInitialDataが見つかりません。"
+            log_msg = f"[{Colors.RED}YouTube Error{Colors.END}] @{username}: ytInitialData not found."
             print(log_msg)
             write_log(log_msg)
             return False, None
         
-        write_log(f"[YouTube DEBUG] @{username}: 'ytInitialData' を発見。", debug=True)
+        write_log(f"[YouTube DEBUG] @{username}: 'ytInitialData' found.", debug=True)
             
         try:
             data = json.loads(match.group(1))
@@ -457,7 +457,7 @@ def check_youtube_live(username):
             
             try:
                 display_name = data['metadata']['channelMetadataRenderer']['title']
-                write_log(f"[YouTube DEBUG] @{username}: 表示名 '{display_name}' を発見。", debug=True)
+                write_log(f"[YouTube DEBUG] @{username}: Display name '{display_name}' found.", debug=True)
             except KeyError:
                 display_name = username
             
@@ -468,21 +468,21 @@ def check_youtube_live(username):
                 if 'liveData' in avatar:
                     video_id = avatar['rendererContext']['commandContext']['onTap']['innertubeCommand']['watchEndpoint']['videoId']
                     live_url = f"https://www.youtube.com/watch?v={video_id}"
-                    write_log(f"[YouTube DEBUG] @{username}: 'liveData' を発見。ライブ中と判断。", debug=True)
+                    write_log(f"[YouTube DEBUG] @{username}: 'liveData' found. Assumed live.", debug=True)
             except KeyError:
                 pass
 
-            write_log(f"[YouTube DEBUG] @{username}: チェック完了。 live_url={live_url}, display_name='{display_name}'", debug=True)
+            write_log(f"[YouTube DEBUG] @{username}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
             return live_url, display_name
 
         except json.JSONDecodeError:
-            log_msg = f"[{Colors.RED}YouTubeエラー{Colors.END}] @{username}: JSON解析に失敗しました。"
+            log_msg = f"[{Colors.RED}YouTube Error{Colors.END}] @{username}: JSON parsing failed."
             print(log_msg)
             write_log(log_msg)
             return False, None
             
     except Exception as e:
-        log_msg = f"[{Colors.RED}YouTubeエラー{Colors.END}] @{username}: ページ取得に失敗しました。 {e}"
+        log_msg = f"[{Colors.RED}YouTube Error{Colors.END}] @{username}: Failed to fetch page. {e}"
         print(log_msg)
         write_log(log_msg)
         return False, None
@@ -491,22 +491,22 @@ def check_twitch_live(username):
     url = f"https://www.twitch.tv/{username}"
     live_url = False
     display_name = f"@{username}"
-    write_log(f"[Twitch DEBUG] @{username}: チェック開始", debug=True)
+    write_log(f"[Twitch DEBUG] @{username}: Starting check", debug=True)
     
     try:
         response = cffi_requests.get(url, headers=browser_headers, impersonate="chrome110", timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         html_content = response.text
-        write_log(f"[Twitch DEBUG] @{username}: HTML取得成功 (ステータス {response.status_code}, {len(html_content)} bytes)。", debug=True)
+        write_log(f"[Twitch DEBUG] @{username}: HTML fetched successfully (Status {response.status_code}, {len(html_content)} bytes).", debug=True)
 
         match = re.search(r'<script type="application/ld\+json">(.*?)</script>', html_content, re.DOTALL)
         if not match:
-            log_msg = f"[{Colors.RED}Twitchエラー{Colors.END}] @{username}: JSON-LD scriptが見つかりません。"
+            log_msg = f"[{Colors.RED}Twitch Error{Colors.END}] @{username}: JSON-LD script not found."
             print(log_msg)
             write_log(log_msg)
             return False, display_name
 
-        write_log(f"[Twitch DEBUG] @{username}: JSON-LD scriptブロックを発見。", debug=True)
+        write_log(f"[Twitch DEBUG] @{username}: JSON-LD script block found.", debug=True)
         try:
             json_data_str = match.group(1)
             
@@ -527,26 +527,26 @@ def check_twitch_live(username):
                             if not found_name and item.get("@type") == "Person":
                                 display_name = item.get("name", username)
                                 found_name = True
-                                write_log(f"[Twitch DEBUG] @{username}: 表示名 '{display_name}' を発見。", debug=True)
+                                write_log(f"[Twitch DEBUG] @{username}: Display name '{display_name}' found.", debug=True)
                             
                             publication = item.get("publication")
                             if not found_live and isinstance(publication, dict):
                                 if publication.get("@type") == "BroadcastEvent" and publication.get("isLiveBroadcast") == True:
                                     live_url = url
                                     found_live = True
-                                    write_log(f"[Twitch DEBUG] @{username}: 'isLiveBroadcast: true' を発見。ライブ中と判断。", debug=True)
+                                    write_log(f"[Twitch DEBUG] @{username}: 'isLiveBroadcast: true' found. Assumed live.", debug=True)
             
-            write_log(f"[Twitch DEBUG] @{username}: チェック完了。 live_url={live_url}, display_name='{display_name}'", debug=True)
+            write_log(f"[Twitch DEBUG] @{username}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
             return live_url, display_name
 
         except (json.JSONDecodeError, KeyError, IndexError) as e:
-            log_msg = f"[{Colors.RED}Twitchエラー{Colors.END}] @{username}: JSON解析に失敗しました。 {e}"
+            log_msg = f"[{Colors.RED}Twitch Error{Colors.END}] @{username}: JSON parsing failed. {e}"
             print(log_msg)
             write_log(log_msg)
             return False, display_name
 
     except Exception as e:
-        log_msg = f"[{Colors.RED}Twitchエラー{Colors.END}] @{username}: ページ取得に失敗しました。 {e}"
+        log_msg = f"[{Colors.RED}Twitch Error{Colors.END}] @{username}: Failed to fetch page. {e}"
         print(log_msg)
         write_log(log_msg)
         return False, display_name
@@ -555,13 +555,13 @@ def check_openrec_live(username):
     url = f"https://public.openrec.tv/external/api/v5/channels/{username}"
     live_url = False
     display_name = f"@{username}"
-    write_log(f"[Openrec DEBUG] @{username}: チェック開始", debug=True)
+    write_log(f"[Openrec DEBUG] @{username}: Starting check", debug=True)
     
     try:
         response = http_session.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         data = response.json()
-        write_log(f"[Openrec DEBUG] @{username}: API取得成功。", debug=True)
+        write_log(f"[Openrec DEBUG] @{username}: API fetched successfully.", debug=True)
         
         display_name = data.get("nickname", username)
         
@@ -570,13 +570,13 @@ def check_openrec_live(username):
             live_id = onair_movies[0].get("id")
             if live_id:
                 live_url = f"https://www.openrec.tv/live/{live_id}"
-                write_log(f"[Openrec DEBUG] @{username}: 'onair_broadcast_movies' を発見。ライブ中と判断。", debug=True)
+                write_log(f"[Openrec DEBUG] @{username}: 'onair_broadcast_movies' found. Assumed live.", debug=True)
         
-        write_log(f"[Openrec DEBUG] @{username}: チェック完了。 live_url={live_url}, display_name='{display_name}'", debug=True)
+        write_log(f"[Openrec DEBUG] @{username}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
         return live_url, display_name
 
     except Exception as e:
-        log_msg = f"[{Colors.RED}Openrecエラー{Colors.END}] @{username}: API取得に失敗しました。 {e}"
+        log_msg = f"[{Colors.RED}Openrec Error{Colors.END}] @{username}: Failed to fetch API. {e}"
         print(log_msg)
         write_log(log_msg)
         return False, display_name
@@ -586,23 +586,23 @@ def check_kick_live(username):
     live_url = False
     display_name = f"@{username}"
     
-    write_log(f"[Kick DEBUG] @{username}: チェック開始...", debug=True)
+    write_log(f"[Kick DEBUG] @{username}: Starting check...", debug=True)
     
     try:
         response = cffi_requests.get(url, headers=browser_headers, impersonate="chrome110", timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         html_content = response.text
 
-        write_log(f"[Kick DEBUG] @{username}: HTML取得成功 (ステータス {response.status_code}, {len(html_content)} bytes)。", debug=True)
+        write_log(f"[Kick DEBUG] @{username}: HTML fetched successfully (Status {response.status_code}, {len(html_content)} bytes).", debug=True)
 
         matches = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html_content, re.DOTALL)
         if not matches:
-            log_msg = f"[{Colors.RED}Kickエラー{Colors.END}] @{username}: JSON-LD scriptが見つかりません。"
+            log_msg = f"[{Colors.RED}Kick Error{Colors.END}] @{username}: JSON-LD script not found."
             print(log_msg)
             write_log(log_msg)
             return False, display_name
 
-        write_log(f"[Kick DEBUG] @{username}: {len(matches)}件のJSON-LD scriptブロックを発見。", debug=True)
+        write_log(f"[Kick DEBUG] @{username}: {len(matches)} JSON-LD script blocks found.", debug=True)
         
         found_live = False
         found_name = False
@@ -611,7 +611,7 @@ def check_kick_live(username):
             if found_live and found_name:
                 break 
 
-            write_log(f"[Kick DEBUG] @{username}: JSON-LDブロック #{i} を解析中...", debug=True)
+            write_log(f"[Kick DEBUG] @{username}: Parsing JSON-LD block #{i}...", debug=True)
             try:
                 data = json.loads(match_str)
                 
@@ -631,33 +631,33 @@ def check_kick_live(username):
                         if item_type == "Person" and item.get("@id") == "#kick-user":
                             display_name = item.get("name", username)
                             found_name = True
-                            write_log(f"[Kick DEBUG] @{username}: 表示名 (Person) '{display_name}' を発見。", debug=True)
+                            write_log(f"[Kick DEBUG] @{username}: Display name (Person) '{display_name}' found.", debug=True)
                         elif item_type == "BroadcastEvent" and item.get("@id") == "#active-stream":
                             if "publishedBy" in item and "name" in item["publishedBy"]:
                                 display_name = item["publishedBy"]["name"]
                                 found_name = True
-                                write_log(f"[Kick DEBUG] @{username}: 表示名 (BroadcastEvent) '{display_name}' を発見。", debug=True)
+                                write_log(f"[Kick DEBUG] @{username}: Display name (BroadcastEvent) '{display_name}' found.", debug=True)
                     
                     if not found_live:
                         if item_type == "BroadcastEvent" and item.get("isLiveBroadcast") == True:
                             live_url = url
                             found_live = True
-                            write_log(f"[Kick DEBUG] @{username}: 'isLiveBroadcast: true' (ルート) を発見。ライブ中と判断。", debug=True)
+                            write_log(f"[Kick DEBUG] @{username}: 'isLiveBroadcast: true' (Root) found. Assumed live.", debug=True)
                         elif item_type == "VideoObject" and "publication" in item:
                              if item["publication"].get("@type") == "BroadcastEvent" and item["publication"].get("isLiveBroadcast") == True:
                                 live_url = url
                                 found_live = True
-                                write_log(f"[Kick DEBUG] @{username}: 'isLiveBroadcast: true' (VideoObject) を発見。ライブ中と判断。", debug=True)
+                                write_log(f"[Kick DEBUG] @{username}: 'isLiveBroadcast: true' (VideoObject) found. Assumed live.", debug=True)
 
             except (json.JSONDecodeError, KeyError, IndexError) as e:
-                write_log(f"[Kick DEBUG] @{username}: ブロック #{i} のJSON解析に失敗: {e}", debug=True)
+                write_log(f"[Kick DEBUG] @{username}: JSON parsing failed for block #{i}: {e}", debug=True)
                 continue
 
-        write_log(f"[Kick DEBUG] @{username}: チェック完了。 live_url={live_url}, display_name='{display_name}'", debug=True)
+        write_log(f"[Kick DEBUG] @{username}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
         return live_url, display_name
 
     except Exception as e:
-        log_msg = f"[{Colors.RED}Kickエラー{Colors.END}] @{username}: ページ取得に失敗しました。 {e}"
+        log_msg = f"[{Colors.RED}Kick Error{Colors.END}] @{username}: Failed to fetch page. {e}"
         print(log_msg)
         write_log(log_msg)
         return False, display_name
@@ -706,9 +706,9 @@ def process_x_feed(url, cache, is_any_streamer_live):
         deleted_guids = cached_guids - current_guids
         
         if not cached_posts_map and current_guids:
-            log_msg = f"-> {display_name} (@{account_id}) の初回スキャン完了。{len(current_guids)}件のPostをキャッシュ。 (通知スキップ)"
+            log_msg = f"-> Initial scan for {display_name} (@{account_id}) complete. {len(current_guids)} posts cached. (Notification skipped)"
             print(log_msg)
-            write_log(f"初回スキャン ({display_name} @{account_id}): {len(current_guids)}件キャッシュ。通知スキップ。")
+            write_log(f"Initial scan ({display_name} @{account_id}): {len(current_guids)} cached. Notification skipped.")
             cache[account_id] = current_posts_map
             return display_name, Config.STATUS_X_MONITORING.format(count=len(current_posts_map))
 
@@ -735,15 +735,15 @@ def process_x_feed(url, cache, is_any_streamer_live):
         
         if bubbled_up_guids:
             for guid in bubbled_up_guids:
-                log_msg = f"[{Colors.GRAY}Post 浮上検知{Colors.END}] {display_name} (@{account_id}): {guid} (キャッシュの最古Postより古いため、通知をスキップ)"
+                log_msg = f"[{Colors.GRAY}Post Resurfaced{Colors.END}] {display_name} (@{account_id}): {guid} (Older than oldest cached post, skipping notification)"
                 print(log_msg)
-                write_log(f"Post 浮上検知 ({display_name} @{account_id}): {guid}. 理由: キャッシュの最古Postより古いため通知スキップ. URL: {current_posts_map[guid].get('link', 'N/A')}")
+                write_log(f"Post Resurfaced ({display_name} @{account_id}): {guid}. Reason: Older than oldest cached post, skipping notification. URL: {current_posts_map[guid].get('link', 'N/A')}")
 
         for guid in real_new_guids:
             post_info = current_posts_map[guid]
-            log_msg = f"[{Colors.GREEN}新規Post検知{Colors.END}] {display_name} (@{account_id}): {post_info['title']}"
+            log_msg = f"[{Colors.GREEN}New Post Detected{Colors.END}] {display_name} (@{account_id}): {post_info['title']}"
             print(log_msg)
-            write_log(f"新規Post検知 ({display_name} @{account_id}): {post_info['title']}. URL: {post_info.get('link', 'N/A')}")
+            write_log(f"New Post Detected ({display_name} @{account_id}): {post_info['title']}. URL: {post_info.get('link', 'N/A')}")
             
             downloaded_files = []
             if post_info['video_urls']:
@@ -765,7 +765,7 @@ def process_x_feed(url, cache, is_any_streamer_live):
                 expanded_limit = feed_limit + len(real_new_guids)
                 expanded_url = re.sub(r'limit=\d+', f'limit={expanded_limit}', url)
                 
-                log_msg = f"-> 削除候補検知。Limitを{expanded_limit}に増やして再取得 ({account_id})"
+                log_msg = f"-> Deletion candidate detected. Re-fetching with limit increased to {expanded_limit} ({account_id})"
                 print(log_msg)
                 write_log(log_msg)
 
@@ -779,7 +779,7 @@ def process_x_feed(url, cache, is_any_streamer_live):
                         expanded_guids.add(guid)
             
             except Exception as e:
-                log_msg = f"[{Colors.RED}削除確認（再取得）エラー{Colors.END}] {e}"
+                log_msg = f"[{Colors.RED}Deletion Check (Refetch) Error{Colors.END}] {e}"
                 print(log_msg)
                 write_log(log_msg)
 
@@ -791,16 +791,16 @@ def process_x_feed(url, cache, is_any_streamer_live):
                 if guid in expanded_guids:
                     is_pushed_out = True
                 else:
-                    log_msg = f"-> 拡張フィードにもGUID ({guid}) が見つからないため、削除と判断。"
+                    log_msg = f"-> GUID ({guid}) not found even in expanded feed, confirming deletion."
                     print(log_msg)
                     write_log(log_msg)
             
             if is_pushed_out:
-                log_msg = f"[{Colors.GRAY}Post 範囲外{Colors.END}] {display_name} (@{account_id}): {guid} (プッシュアウトと判断)"
+                log_msg = f"[{Colors.GRAY}Post Out of Range{Colors.END}] {display_name} (@{account_id}): {guid} (Assumed pushed out)"
                 print(log_msg)
-                write_log(f"Post 範囲外 ({display_name} @{account_id}): {guid}. 理由: 拡張フィード(limit={len(expanded_guids)})でGUIDが発見されたためプッシュアウトと判断. URL: {cached_posts_map.get(guid, {}).get('link', 'N/A')}")
+                write_log(f"Post Out of Range ({display_name} @{account_id}): {guid}. Reason: GUID found in expanded feed (limit={len(expanded_guids)}), assumed pushed out. URL: {cached_posts_map.get(guid, {}).get('link', 'N/A')}")
             else:
-                log_msg = f"[{Colors.YELLOW}削除Post検知{Colors.END}] {display_name} (@{account_id}): {guid}"
+                log_msg = f"[{Colors.YELLOW}Post Deletion Detected{Colors.END}] {display_name} (@{account_id}): {guid}"
                 print(log_msg)
                 
                 deleted_post_info = cached_posts_map.get(guid, {})
@@ -809,8 +809,8 @@ def process_x_feed(url, cache, is_any_streamer_live):
                 deleted_post_info['description_text'] = Config.NOTIF_POST_DELETED_DESC.format(desc=deleted_post_info.get('description_text', Config.STATUS_BODY_UNKNOWN))
                 deleted_post_info['link'] = deleted_post_info.get('link', '') 
                 
-                reason = "拡張フィードで確認したがGUIDが消失" if potential_push_out else "フィードからGUIDが消失"
-                write_log(f"削除Post検知 ({display_name} @{account_id}): {guid}. V{reason}. URL: {deleted_post_info.get('link', 'N/A')}")
+                reason = "Reason: GUID missing after expanded feed check" if potential_push_out and not is_pushed_out else "Reason: GUID missing from feed"
+                write_log(f"Post Deletion Detected ({display_name} @{account_id}): {guid}. {reason}. URL: {deleted_post_info.get('link', 'N/A')}")
                 send_post_notification(notification_account_name, deleted_post_info, [], "FF0000", mention_everyone=False)
         
         cache[account_id] = current_posts_map
@@ -818,10 +818,10 @@ def process_x_feed(url, cache, is_any_streamer_live):
 
     except Exception as e:
         account_id_str = f":{account_id}" if account_id else ""
-        log_msg = f"[{Colors.RED}X{account_id_str}エラー{Colors.END}] {e}"
+        log_msg = f"[{Colors.RED}X{account_id_str} Error{Colors.END}] {e}"
         print(log_msg)
         write_log(log_msg)
-        return f"@{account_id}" if account_id else "X:エラー", Config.STATUS_X_ERROR
+        return f"@{account_id}" if account_id else "X:Error", Config.STATUS_X_ERROR
 
 def main():
     cache = load_cache()
@@ -866,16 +866,16 @@ def main():
     write_log(Config.LOG_STARTUP)
     
     print(f"TikTok: {', '.join(TIKTOK_TARGET_USERNAMES) if TIKTOK_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
-    print(f"ニコ生: {', '.join(NICONICO_TARGET_USER_IDS) if NICONICO_TARGET_USER_IDS else Config.STATUS_SERVICE_DISABLED}")
+    print(f"Nico Live: {', '.join(NICONICO_TARGET_USER_IDS) if NICONICO_TARGET_USER_IDS else Config.STATUS_SERVICE_DISABLED}")
     print(f"YouTube: {', '.join(YOUTUBE_TARGET_USERNAMES) if YOUTUBE_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
     print(f"Twitch: {', '.join(TWITCH_TARGET_USERNAMES) if TWITCH_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
     print(f"Openrec: {', '.join(OPENREC_TARGET_USERNAMES) if OPENREC_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
     print(f"Kick: {', '.join(KICK_TARGET_USERNAMES) if KICK_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
-    print(f"X (RSSHub): {len(X_TARGET_URLS)} アカウント" if X_TARGET_URLS else f"X (RSSHub): {Config.STATUS_SERVICE_DISABLED}")
+    print(f"X (RSSHub): {len(X_TARGET_URLS)} accounts" if X_TARGET_URLS else f"X (RSSHub): {Config.STATUS_SERVICE_DISABLED}")
 
-    print(f"X チェック間隔: {X_CHECK_INTERVAL_SECONDS} 秒")
-    print(f"Live チェック間隔: {LIVE_CHECK_INTERVAL_SECONDS} 秒")
-    print(f"Cookie: {COOKIE_FILE_PATH if os.path.exists(COOKIE_FILE_PATH) else '未検出'}")
+    print(f"X Check Interval: {X_CHECK_INTERVAL_SECONDS} seconds")
+    print(f"Live Check Interval: {LIVE_CHECK_INTERVAL_SECONDS} seconds")
+    print(f"Cookie: {COOKIE_FILE_PATH if os.path.exists(COOKIE_FILE_PATH) else 'Not Found'}")
     print("---------------------------------")
     
     last_live_check_time = 0
@@ -1027,9 +1027,9 @@ def main():
                 for user_id, info in niconico_live_statuses.items():
                     niconico_formatted_name = f"{info['name']} (ID: {user_id})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} ニコ生: {niconico_formatted_name}")
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} Nico Live: {niconico_formatted_name}")
                     else:
-                        print(f"{Config.CONSOLE_OFF_PREFIX} ニコ生: {niconico_formatted_name}")
+                        print(f"{Config.CONSOLE_OFF_PREFIX} Nico Live: {niconico_formatted_name}")
             
             if YOUTUBE_TARGET_USERNAMES:
                 for username, info in youtube_live_statuses.items():
@@ -1066,7 +1066,7 @@ def main():
             if X_TARGET_URLS:
                 print("---------------------------------")
                 for account_id, info in x_accounts_status.items():
-                    status_color_prefix = Config.CONSOLE_RSS_PAUSED_PREFIX if "停止" in info['status'] else Config.CONSOLE_RSS_PREFIX
+                    status_color_prefix = Config.CONSOLE_RSS_PAUSED_PREFIX if "Paused" in info['status'] else Config.CONSOLE_RSS_PREFIX
                     print(f"{status_color_prefix} {info['name']} (@{account_id}) ({info['status']})")
 
             print(Config.CONSOLE_FOOTER.format(
