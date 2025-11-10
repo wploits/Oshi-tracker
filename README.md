@@ -9,11 +9,11 @@
 ## Credit / クレジット
 
 **🇯🇵**
-開発者: [あなたの名前 または ハンドル名]
+開発者: [wploits!✨]
 (注意: このツールの一部のコードは、AIの支援を受けて書かれています。)
 
 **🇺🇸**
-Developer: [Your Name or Handle]
+Developer: [wploits!✨]
 (Note: Some code in this tool was written with the assistance of AI.)
 
 ## License / ライセンス
