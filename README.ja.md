@@ -6,133 +6,149 @@
 
 > The "Stream / X tracker" for your "推し活(Oshi-katsu)" !
 
+## 📖 はじめに - このツールがやること
+
 ようこそ！推しトラッカーへ！
 
 「あーなんか推しの配信とか最新のポストをDiscordに通知してくれるツールがあればいいのになー！！！」
-と思ったそこのあなた！！！！
-このチュートリアルを使って、貴方の推しがした最新の行動を見逃さないようにしましょう 👀
+と思ったそこのあなた！
 
-## ✨ 機能
+このツールは、あなたの「推し」の活動を24時間監視し、新しい動きがあった瞬間にあなたのDiscordサーバーへ通知を送る、**全自動「推し活」支援ボット**です。
 
-* 配信の通知をDiscordに飛ばす
+### ✨ 主な機能
+* **ライブ配信の自動通知**
+  * 推しが配信を開始・終了した瞬間にDiscordへ通知します。
+* **X (旧Twitter) のポスト通知**
+  * 新しいポスト（ツイート）を通知します。
+* **X (旧Twitter) の削除検知**
+  * 推しがポストを削除（または非公開）にした場合、**その内容をDiscordに通知します。**
 
-* X(旧Twitter)の新しいポスト及び削除されたポストの通知
+### 📡 サポートされているプラットフォーム
+* **ライブ配信**: YouTube, Twitch, ニコニコ(ニコ生), TikTok, Openrec, KICK
+* **ポスト**: X (旧Twitter)
 
-## 📡 サポートされている配信サイト
+---
 
-* YouTube
+## 💻 必要なもの（インストールガイド）
 
-* Twitch
+このツールを動かすには、いくつかの「部品」が必要です。順番に準備しましょう。
 
-* ニコニコ(ニコ生)
+### 1. Windows PC
+* Windows 10 または Windows 11 が搭載されたPC。
 
-* TikTok
+### 2. Python (プログラミング言語)
+* このツールを動かすための「エンジン」です。
+* [Python公式サイトから 3.10.x をダウンロード](https://www.python.org/downloads/windows/)
+* **最重要:** インストーラーを実行するとき、**必ず「Add Python 3.10 to PATH」というチェックボックスにチェックを入れてください。** これを忘れると動きません。
+    * 
 
-* Openrec
+### 3. Docker Desktop (X監視サーバー)
+* X (Twitter) は監視が厳しいため、このツール内で「監視用の小さなサーバー（RSSHub）」を動かす必要があります。そのための「実行環境」です。
+* [Docker Desktop 公式サイトからダウンロード](https://www.docker.com/products/docker-desktop/)
+* インストールが完了したら、一度Docker Desktopを起動しておいてください（クジラのアイコンがタスクトレイにあればOK）。
 
-* KICK
+### 4. Discord アカウント
+* 通知を受け取りたいあなたのDiscordサーバーが必要です。
 
-## 💻 必要なもの
+### 5. X (Twitter) アカウント
+* 監視サーバー（RSSHub）を動かすために、あなたのアカウントの「認証情報（Cookie）」が必要になります。
 
-* Windows (10 / 11)
+---
 
-* [Python (3.10以上を推奨)](https://www.python.org/downloads/)
+## 🛠️ 導入・設定ステップ
 
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+すべての「必要なもの」が揃ったら、いよいよ設定です。
 
-* Discordアカウント (通知を受け取るため)
+### Step 0: ソースコードをダウンロードする
+1.  このリポジトリ（Oshi-tracker）のトップページに行きます。
+2.  緑色の**`< > Code`**ボタンをクリックします。
+3.  **`Download ZIP`** を選択します。
+4.  ダウンロードしたZIPファイルを、好きな場所（デスクトップなど）に解凍します。
+5.  これ以降の説明は、すべてこの解凍したフォルダの中にある **`src` フォルダ** を基準に進めます。
 
-* X (旧Twitter) アカウント (Cookieを取得するため)
+### Step 1: 必要なライブラリをインストールする
+`src`フォルダの中にある `requirements.bat` を見つけてください。
+これを**ダブルクリックして実行**します。
 
-## 🛠️ 導入・設定方法
+黒い画面（コマンドプロンプト）が開き、必要なライブラリ（`requests`, `pygame`, `curl_cffi`, `yt-dlp`）が自動でインストールされます。
 
-### 0. ソースコードをダウンロードする
+### Step 2: X (Twitter) 監視サーバー (RSSHub) を設定する
+ここが一番の山場です。Xのポストを監視するための「監視サーバー」をあなたのPC内で起動します。
 
-このリポジトリの「Code」ボタンから `Download ZIP` を選択し、フルソースコードをダウンロード・解凍します。
-(ここからの話はすべて解凍した`src`フォルダーの中を見ている前提で話します)
-
-### 1. 必要なライブラリをインストールする
-
-`src`フォルダの中にある `requirements.bat` をダブルクリックして実行します。
-必要なPythonライブラリ (`requests`, `pygame`, `curl_cffi`, `yt-dlp`) が自動でインストールされます。
-
-### 2. X (Twitter) の設定とRSSHubの起動
-
-Xのポストを監視するには、`RSSHub`という別のツールをDockerで起動する必要があります。
-
-**a. Cookieを取得する**
-
-1. Chromeブラウザで [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) 拡張機能をインストールします。
-
-2. X ( `https://x.com` ) を開き、ログインしていることを確認します。
-
-3. 拡張機能のアイコンをクリックし、`Export` ボタンを押して `cookies.txt` ファイルをダウンロードします。
+**a. Cookie（認証情報）を取得する**
+1.  Chromeブラウザで [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) 拡張機能をインストールします。
+2.  X ( `https://x.com` ) を開き、自分のアカウントにログインしていることを確認します。
+3.  ブラウザの右上にある「パズルのピース🧩」のような拡張機能アイコンをクリックし、「Get cookies.txt LOCALLY」を選択します。
+4.  開いたウィンドウで `Export` ボタンを押すと、`cookies.txt` という名前のファイルがダウンロードされます。
+    * 
 
 **b. Oshi-trackerにCookieを設定する**
-
-1. `src/datas/` フォルダを開きます。
-
-2. ダウンロードした `cookies.txt` の中身を**すべてコピー**し、`src/datas/cookies.txt` に**貼り付けて保存**します。（既にある内容は上書きしてください）
+1.  `src/datas/` フォルダを開きます。
+2.  ダウンロードした `cookies.txt` をメモ帳などで開きます。
+3.  中身を**すべてコピー**（`Ctrl+A` → `Ctrl+C`）します。
+4.  `src/datas/cookies.txt` に**貼り付けて保存**します。（既にある内容は消して、上書きしてください）
 
 **c. RSSHubに `auth_token` を設定する**
+1.  `src/rsshub/` フォルダにある `docker-compose.yml` をメモ帳などで開きます。
+2.  `TWITTER_AUTH_TOKEN=` という行を探します。
+3.  さきほどダウンロードした `cookies.txt` の中から、`auth_token` と書かれている行を探します。（ファイルの後ろの方にあります）
+    ```
+    .x.com	TRUE	/	TRUE	[数字]	auth_token	[ここに書かれている長い英数字]
+    ```
+4.  この `[ここに書かれている長い英数字]` の部分だけをコピーし、`docker-compose.yml` の `TWITTER_AUTH_TOKEN=` の**後ろに貼り付けて保存**します。
+    ```yaml
+    # 変更前
+    TWITTER_AUTH_TOKEN: 
+    # 変更後 (例)
+    TWITTER_AUTH_TOKEN: 012345abcdef...
+    ```
 
-1. `src/rsshub/` フォルダにある `docker-compose.yml` をメモ帳などで開きます。
+**d. RSSHub（監視サーバー）を起動する**
+1.  **Docker Desktopが起動していること**を必ず確認してください。（PC起動時に自動で起動するはずです）
+2.  `src/rsshub/` フォルダを開きます。
+3.  ウィンドウ上部のアドレスバー（`C:\Users\...\Oshi-tracker\src\rsshub` と表示されている場所）をクリックし、`cmd` と入力してEnterキーを押します。
+    * 
+4.  黒い画面（コマンドプロンプト）が開いたら、以下の呪文を入力してEnterキーを押します。
+    ```bash
+    docker-compose up -d
+    ```
+5.  イメージのダウンロードとビルドが始まります。緑色の `Done` や `started` という文字が出れば成功です。
 
-2. `TWITTER_AUTH_TOKEN=` という行を探します。
-
-3. `b.`で使ったダウンロード済みの `cookies.txt` の中から、`auth_token` と書かれている行を探します。
-
-   ```
-   .x.com	TRUE	/	TRUE	[数字]	auth_token	[ここに書かれている長い英数字]
-   ```
-
-4. この `[ここに書かれている長い英数字]` の部分だけをコピーし、`docker-compose.yml` の `TWITTER_AUTH_TOKEN=` の**後ろに貼り付けて保存**します。
-
-   ```
-   # 変更前
-   TWITTER_AUTH_TOKEN: 
-   # 変更後 (例)
-   TWITTER_AUTH_TOKEN: 012345abcdef...
-   ```
-
-**d. RSSHubを起動する**
-
-1. **Docker Desktopを起動**しておきます。
-
-2. `src/rsshub/` フォルダのアドレスバーに `cmd` と入力してコマンドプロンプトを開きます。
-
-3. `docker-compose up -d` と入力し、Enterキーを押します。
-
-4. 緑色の `Done` や `started` という文字が出れば成功です。
-
-### 3. Oshi-tracker (main.py) を設定する
+### Step 3: Oshi-tracker (main.py) を設定する
+いよいよ最後の設定です。どの「推し」を監視するかをトラッカーに教えます。
 
 `src`フォルダにある `main.py` をメモ帳やVSCodeなどのエディタで開きます。
-このファイルの上部にある設定を、あなた用に書き換える必要があります。
+ファイルの上部にある`TIKTOK_TARGET_USERNAMES`から`DISCORD_WEBHOOK_URL`までが設定項目です。
 
-**監視したい推しのアカウントを設定してください。**
-監視しないプラットフォームは、`[]`（空のリスト）のままにしてください。
+**監視しないプラットフォームは、`[]`（空のリスト）のままにしてください。**
 
 ```python
 # 監視したいTikTokの@ユーザー名（@は不要）
+# 例: https://www.tiktok.com/@neymarjr の場合
 TIKTOK_TARGET_USERNAMES = ["neymarjr"]
 
-# 監視したいニコ生のユーザーID ([https://www.nicovideo.jp/user/XXXX](https://www.nicovideo.jp/user/XXXX) の数字)
+# 監視したいニコ生のユーザーID (https://www.nicovideo.jp/user/XXXX の数字)
+# 例: https://www.nicovideo.jp/user/131666408 の場合
 NICONICO_TARGET_USER_IDS = ["131666408"]
 
 # 監視したいYouTubeの@ユーザー名（@は不要）
+# 例: https://www.youtube.com/@MrBeast の場合
 YOUTUBE_TARGET_USERNAMES = ["MrBeast"]
 
 # 監視したいTwitchのユーザー名
+# 例: https://www.twitch.tv/ninja の場合
 TWITCH_TARGET_USERNAMES = ["ninja"]
 
 # 監視したいOpenrecのユーザー名
+# 例: https://www.openrec.tv/user/warabarin の場合
 OPENREC_TARGET_USERNAMES = ["warabarin"]
 
 # 監視したいKickのユーザー名
+# 例: https://kick.com/adinross の場合
 KICK_TARGET_USERNAMES = ["adinross"]
 
 # 監視したいXのRSSHub URL
+# "http://localhost:1200/twitter/user/Xのユーザー名"
 X_TARGET_URLS = [
     "http://localhost:1200/twitter/user/elonmusk?limit=20&includeRts=false&includeReplies=false",
     "http://localhost:1200/twitter/user/BillGates?limit=10&includeRts=false&includeReplies=false",
@@ -142,31 +158,36 @@ X_TARGET_URLS = [
 LIVE_PAUSE_X_TARGET_IDS = ["elonmusk"]
 
 # 通知を飛ばしたいDiscordのWebhook URL
-DISCORD_WEBHOOK_URL = "[https://discord.com/api/webhooks/1234567890/xxxxxxxxxxxx_YYYYYYYYYYYYYYYYY](https://discord.com/api/webhooks/1234567890/xxxxxxxxxxxx_YYYYYYYYYYYYYYYYY)"
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1234567890/xxxxxxxxxxxx_YYYYYYYYYYYYYYYYY"
 ```
 
+#### Discord Webhook URLの取得方法
+1.  通知を送りたいDiscordサーバーを開きます。
+2.  チャンネルを右クリックし、「チャンネルの編集」→「連携サービス」→「ウェブフック」を選択します。
+3.  「新しいウェブフック」ボタンを押し、名前（例: 推しトラッカー）を付けます。
+4.  「ウェブフックURLをコピー」を押し、`main.py`の`DISCORD_WEBHOOK_URL = "..."`の部分に貼り付けます。
+
 #### X (Twitter) URLのパラメータ設定
-
 `X_TARGET_URLS` のURLには、いくつかオプションがあります。
-
 * `limit=10`: 一度にチェックする最新ポストの件数。**10〜20を推奨**します。
-
 * `includeRts=false`: リツイート（リポスト）を通知に含めるか (`true` / `false`)。
-
 * `includeReplies=false`: リプライ（返信）を通知に含めるか (`true` / `false`)。
 
-### 4. トラッカーを起動する
+### Step 4: トラッカーを起動する
+お疲れ様でした！
+`src`フォルダにある `main.py` を**ダブルクリックして実行**します。
 
-`src`フォルダにある `main.py` をダブルクリック、または `python main.py` で実行します。
-コンソールが起動し、設定した全アカウントの監視が開始されます。
+黒い画面（コンソール）が起動し、設定した全アカウントの監視が開始されます。
+あとはこの画面を開いたままにしておけば、推しが活動するたびにDiscordに通知が届きます！
 
-## 🔧 詳細設定 (main.py)
+---
+
+## 🔧 詳細設定 (上級者向け)
 
 `main.py` の中盤にある`Config`クラスや、その他のグローバル変数を変更することで、動作を細かく調整できます。
 
 ### サウンドのオン/オフ
-
-通知音を消したい場合は、パスを空（`""`）にしてください。
+PC本体から通知音を鳴らしたくない場合は、パスを空（`""`）にしてください。
 
 ```python
 # 配信開始音
@@ -178,8 +199,7 @@ SOUND_MESSAGE_DETECTED = "./sounds/message_detected.mp3"
 ```
 
 ### 監視間隔の調整
-
-数値を小さくすると検知が早くなりますが、API制限（BAN）のリスクが上がります。
+数値を小さくすると検知が早くなりますが、各プラットフォームからブロック（BAN）されるリスクが上がります。**自己責任で変更してください。**
 
 ```python
 # X (RSSHub) のチェック間隔 (秒)
@@ -189,8 +209,8 @@ LIVE_CHECK_INTERVAL_SECONDS = 60
 ```
 
 ### デバッグログ
-
 `datas/tracker_log.txt` に詳細な動作ログを残すかどうか。
+`True` にすると、どのプラットフォームのチェックに成功/失敗したかなどの記録が残ります。
 
 ```python
 class Config:
@@ -198,8 +218,7 @@ class Config:
 ```
 
 ### 通知メッセージの変更
-
-Discordに飛ぶメッセージを変更できます。
+Discordに飛ぶメッセージを自由に変更できます。
 
 ```python
 class Config:
@@ -209,17 +228,33 @@ class Config:
     # (...省略...)
 ```
 
-## 👨‍💻 開発者向け (For Developers)
+---
 
+## 🤔 トラブルシューティング (FAQ)
+
+**Q. `python` や `pip` コマンドが見つからないと言われる。**
+**A.** Pythonのインストール時に「Add Python to PATH」にチェックを入れ忘れています。Pythonを一度アンインストールし、再度インストールして**必ずチェックを入れてください。**
+
+**Q. `docker-compose up -d` がエラーになる。**
+**A.** Docker Desktopが起動していない可能性が高いです。PCを再起動するか、Docker Desktopアプリを手動で起動してから、もう一度コマンドを実行してください。
+
+**Q. X (Twitter) の通知だけが来ない。**
+**A.** `auth_token` が古いか、`docker-compose.yml`への貼り付けに失敗しています。`Step 2-c`の手順をもう一度確認してください。
+
+**Q. YouTube / Twitch / Kick / TikTok の通知が来ない。**
+**A.** `curl_cffi`ライブラリのインストールに失敗しているか、相手側のサイト構造が変更された可能性があります。`requirements.bat`を再実行するか、`Config.DEBUG_LOGGING = True`にして`datas/tracker_log.txt`を確認してください。
+
+---
+
+## 👨‍💻 開発者向け (For Developers)
 このツールは、`python-requests`ではTLSフィンガープリント（JA3）によってブロックされるプラットフォーム（YouTube, Twitch, Kick, TikTok）に対応するため、`curl_cffi`ライブラリを使用しています。
 これにより、`impersonate="chrome110"`を指定し、TLSハンドシェイクをChromeブラウザに偽装することで、403 (Forbidden) エラーを回避しています。
 
+---
+
 ## 👑 クレジット (Credit)
-
-* **Developer:** \[Your Name or Handle\]
-
+* **Developer:** [Your Name or Handle]
 * *(Note: Some code in this tool was written with the assistance of AI.)*
 
 ## 📜 ライセンス (License)
-
 This project is licensed under the [MIT License](./LICENSE).
