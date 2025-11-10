@@ -24,6 +24,7 @@ If that's you, use this tutorial to make sure you never miss your favorite creat
 * TikTok
 * Openrec
 * KICK
+* Twitcasting
 
 ---
 
@@ -122,6 +123,10 @@ OPENREC_TARGET_USERNAMES = ["warabarin"]
 # Example: https://kick.com/adinross
 KICK_TARGET_USERNAMES = ["adinross"]
 
+# Twitcasting usernames to track
+# Example: https://twitcasting.tv/korekore_ch
+TWITCASTING_TARGET_USERNAMES = ["korekore_ch"]
+
 # X RSSHub URLs to track
 # "http://localhost:1200/twitter/user/X_USERNAME"
 X_TARGET_URLS = [
@@ -152,6 +157,39 @@ The URLs in `X_TARGET_URLS` have several options:
 You're done!
 **Double-click `main.py`** in the `src` folder (or run `python main.py` in your terminal).
 A console window will open, and monitoring for all your configured accounts will begin. As long as this window is running, you will get notifications on Discord!
+
+---
+
+## 🔴 Automatic Stream Recording
+
+### Enable/Disable Toggle
+
+```python
+class Config:
+    DEBUG_LOGGING = False
+    ENABLE_AUTO_RECORDING = False # ← Right here!!!! False = Off, True = On
+```
+
+### Target Platforms
+
+```python
+class Config:
+    # (...snip...)
+    RECORDING_TARGET_PLATFORMS = [
+        #NOTIF_PLATFORM_TIKTOK,
+        #NOTIF_PLATFORM_NICONICO,
+        #NOTIF_PLATFORM_YOUTUBE,
+        #NOTIF_PLATFORM_TWITCH,
+        #NOTIF_PLATFORM_OPENREC,
+        #NOTIF_PLATFORM_KICK,
+        #NOTIF_PLATFORM_TWITCASTING
+    ]
+    # (...snip...)
+```
+
+Remove the # from the lines above to enable automatic recording for that platform!
+
+(To disable it, add the # back or delete the line. If you delete a line and want to add it back later, refer to this readme to add the platform.)
 
 ---
 
