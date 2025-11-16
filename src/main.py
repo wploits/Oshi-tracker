@@ -10,6 +10,7 @@ from urllib.parse import urlparse, parse_qs
 import html
 from datetime import datetime
 from curl_cffi import requests as cffi_requests
+import signal
 
 os.system('')
 
@@ -23,6 +24,7 @@ class Colors:
 
 class Config:
     DEBUG_LOGGING = False
+    ENABLE_AUTO_RECORDING = True
 
     APP_TITLE = "--- Oshi-tracker ---"
     LOG_STARTUP = "--- Tracker Startup ---"
@@ -56,6 +58,17 @@ class Config:
     NOTIF_PLATFORM_TWITCH = "Twitch"
     NOTIF_PLATFORM_OPENREC = "Openrec"
     NOTIF_PLATFORM_KICK = "Kick"
+    NOTIF_PLATFORM_TWITCASTING = "TwitCasting"
+
+    RECORDING_TARGET_PLATFORMS = [
+        #NOTIF_PLATFORM_TIKTOK,
+        NOTIF_PLATFORM_NICONICO,
+        #NOTIF_PLATFORM_YOUTUBE,
+        #NOTIF_PLATFORM_TWITCH,
+        #NOTIF_PLATFORM_OPENREC,
+        #NOTIF_PLATFORM_KICK,
+        #NOTIF_PLATFORM_TWITCASTING
+    ]
 
     NOTIF_POST_DELETED_TITLE = "[Deletion Detected] {title}"
     NOTIF_POST_DELETED_DESC = "This Post was deleted or made private.\n\n**▼ Original Post Body ▼**\n{desc}"
@@ -63,11 +76,12 @@ class Config:
     LOG_X_PAUSE = "-> Pausing monitoring for {name} (@{account_id}) (Due to an ongoing live stream)"
 
 TIKTOK_TARGET_USERNAMES = ["neymarjr"]
-NICONICO_TARGET_USER_IDS = ["33618224"]
+NICONICO_TARGET_USER_IDS = ["142120663"]
 YOUTUBE_TARGET_USERNAMES = ["MrBeast"]
 TWITCH_TARGET_USERNAMES = ["kun_50"]
 OPENREC_TARGET_USERNAMES = ["mokouliszt_or"]
 KICK_TARGET_USERNAMES = ["adinross"]
+TWITCASTING_TARGET_USERNAMES = ["korekore_ch"]
 
 X_TARGET_URLS = [
     "http://localhost:1200/twitter/user/elonmusk?limit=20&includeRts=false&includeReplies=false",
@@ -88,6 +102,7 @@ SOUND_MESSAGE_DETECTED = "./sounds/message_detected.mp3"
 CACHE_FILE = "./datas/tracker_cache.json"
 COOKIE_FILE_PATH = "./datas/cookies.txt"
 LOG_FILE = "./datas/tracker_log.txt"
+RECORDING_PATH = "./datas/recordings/"
 
 niconico_headers = {"X-Frontend-Id": "6"}
 browser_headers = {
@@ -98,6 +113,8 @@ browser_headers = {
 pygame.mixer.init()
 http_session = requests.Session()
 http_session.headers.update(browser_headers)
+
+recording_processes = {}
 
 def write_log(message, debug=False):
     if debug and not Config.DEBUG_LOGGING:
@@ -351,6 +368,33 @@ def get_oldest_post_date(posts_map):
         except ValueError:
             continue
     return oldest_date
+
+def start_recording(platform, identifier, live_url):
+    try:
+        os.makedirs(RECORDING_PATH, exist_ok=True)
+        filename = os.path.join(RECORDING_PATH, f"[{platform}]_{identifier}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4")
+        
+        cmd = ["yt-dlp", "--cookies", COOKIE_FILE_PATH, "-o", filename, live_url]
+        
+        process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        recording_processes[identifier] = process
+        write_log(f"Recording Started: {identifier} ({platform}) -> {filename}", debug=True)
+        
+    except Exception as e:
+        log_msg = f"[{Colors.RED}Recording Start Error{Colors.END}] {identifier}: {e}"
+        print(log_msg)
+        write_log(log_msg)
+
+def stop_recording(identifier):
+    try:
+        if identifier in recording_processes:
+            process = recording_processes.pop(identifier)
+            process.send_signal(signal.SIGINT)
+            write_log(f"Recording Stopped: {identifier}", debug=True)
+    except Exception as e:
+        log_msg = f"[{Colors.RED}Recording Stop Error{Colors.END}] {identifier}: {e}"
+        print(log_msg)
+        write_log(log_msg)
 
 def check_tiktok_live(username):
     url = f"https://www.tiktok.com/@{username}"
@@ -662,6 +706,33 @@ def check_kick_live(username):
         write_log(log_msg)
         return False, display_name
 
+def check_twitcasting_live(username):
+    url = f"https://twitcasting.tv/streamserver.php?target={username}&mode=client&player=pc_web"
+    live_url = False
+    display_name = f"@{username}"
+    write_log(f"[TwitCasting DEBUG] @{username}: Starting check", debug=True)
+    
+    try:
+        response = http_session.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
+        response.raise_for_status()
+        data = response.json()
+        write_log(f"[TwitCasting DEBUG] @{username}: API fetched successfully.", debug=True)
+        
+        display_name = data.get("broadcaster", {}).get("name", username)
+        
+        if data.get("movie", {}).get("live") == True:
+            live_url = f"https://twitcasting.tv/{username}"
+            write_log(f"[TwitCasting DEBUG] @{username}: 'movie.live: true' found. Assumed live.", debug=True)
+
+        write_log(f"[TwitCasting DEBUG] @{username}: Check complete. live_url={live_url}, display_name='{display_name}'", debug=True)
+        return live_url, display_name
+
+    except Exception as e:
+        log_msg = f"[{Colors.RED}TwitCasting Error{Colors.END}] @{username}: Failed to fetch API. {e}"
+        print(log_msg)
+        write_log(log_msg)
+        return False, display_name
+
 def process_x_feed(url, cache, is_any_streamer_live):
     account_id = ""
     try:
@@ -855,6 +926,11 @@ def main():
     if KICK_TARGET_USERNAMES:
         for username in KICK_TARGET_USERNAMES:
             kick_live_statuses[username] = {"status": False, "name": f"@{username}"}
+    
+    twitcasting_live_statuses = {}
+    if TWITCASTING_TARGET_USERNAMES:
+        for username in TWITCASTING_TARGET_USERNAMES:
+            twitcasting_live_statuses[username] = {"status": False, "name": f"@{username}"}
 
     x_accounts_status = {}
     if X_TARGET_URLS:
@@ -871,6 +947,7 @@ def main():
     print(f"Twitch: {', '.join(TWITCH_TARGET_USERNAMES) if TWITCH_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
     print(f"Openrec: {', '.join(OPENREC_TARGET_USERNAMES) if OPENREC_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
     print(f"Kick: {', '.join(KICK_TARGET_USERNAMES) if KICK_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
+    print(f"TwitCasting: {', '.join(TWITCASTING_TARGET_USERNAMES) if TWITCASTING_TARGET_USERNAMES else Config.STATUS_SERVICE_DISABLED}")
     print(f"X (RSSHub): {len(X_TARGET_URLS)} accounts" if X_TARGET_URLS else f"X (RSSHub): {Config.STATUS_SERVICE_DISABLED}")
 
     print(f"X Check Interval: {X_CHECK_INTERVAL_SECONDS} seconds")
@@ -891,97 +968,122 @@ def main():
                 
                 if TIKTOK_TARGET_USERNAMES:
                     for username in TIKTOK_TARGET_USERNAMES:
-                        new_tiktok_status, tt_name = check_tiktok_live(username)
-                        old_tiktok_status = tiktok_live_statuses[username]["status"]
-                        if tt_name:
-                            tiktok_live_statuses[username]["name"] = tt_name
+                        new_status, tt_name = check_tiktok_live(username)
+                        old_status = tiktok_live_statuses[username]["status"]
+                        if tt_name: tiktok_live_statuses[username]["name"] = tt_name
                         
-                        if new_tiktok_status != old_tiktok_status:
+                        if new_status != old_status:
                             notif_name = tiktok_live_statuses[username]["name"]
-                            if new_tiktok_status:
-                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=Config.NOTIF_PLATFORM_TIKTOK), SOUND_LIVE_START, url=new_tiktok_status)
+                            platform = Config.NOTIF_PLATFORM_TIKTOK
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, username, new_status)
                             else:
-                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=Config.NOTIF_PLATFORM_TIKTOK), SOUND_LIVE_END)
-                        tiktok_live_statuses[username]["status"] = new_tiktok_status
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(username)
+                        tiktok_live_statuses[username]["status"] = new_status
 
                 if NICONICO_TARGET_USER_IDS:
                     for user_id in NICONICO_TARGET_USER_IDS:
-                        new_niconico_status, nn_name = check_niconico_live(user_id)
-                        old_niconico_status = niconico_live_statuses[user_id]["status"]
-                        if nn_name:
-                            niconico_live_statuses[user_id]["name"] = nn_name
+                        new_status, nn_name = check_niconico_live(user_id)
+                        old_status = niconico_live_statuses[user_id]["status"]
+                        if nn_name: niconico_live_statuses[user_id]["name"] = nn_name
 
-                        if new_niconico_status != old_niconico_status:
+                        if new_status != old_status:
                             notif_name = niconico_live_statuses[user_id]["name"]
-                            if new_niconico_status:
-                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=Config.NOTIF_PLATFORM_NICONICO), SOUND_LIVE_START, url=new_niconico_status)
+                            platform = Config.NOTIF_PLATFORM_NICONICO
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, user_id, new_status)
                             else:
-                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=Config.NOTIF_PLATFORM_NICONICO), SOUND_LIVE_END)
-                        niconico_live_statuses[user_id]["status"] = new_niconico_status
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(user_id)
+                        niconico_live_statuses[user_id]["status"] = new_status
 
                 if YOUTUBE_TARGET_USERNAMES:
                     for username in YOUTUBE_TARGET_USERNAMES:
-                        new_youtube_status, yt_name = check_youtube_live(username)
-                        old_youtube_status = youtube_live_statuses[username]["status"]
+                        new_status, yt_name = check_youtube_live(username)
+                        old_status = youtube_live_statuses[username]["status"]
+                        if yt_name: youtube_live_statuses[username]["name"] = yt_name
                         
-                        if yt_name:
-                            youtube_live_statuses[username]["name"] = yt_name
-                        
-                        if new_youtube_status != old_youtube_status:
+                        if new_status != old_status:
                             notif_name = youtube_live_statuses[username]["name"]
-                            if new_youtube_status:
-                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=Config.NOTIF_PLATFORM_YOUTUBE), SOUND_LIVE_START, url=new_youtube_status)
+                            platform = Config.NOTIF_PLATFORM_YOUTUBE
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, username, new_status)
                             else:
-                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=Config.NOTIF_PLATFORM_YOUTUBE), SOUND_LIVE_END)
-                            youtube_live_statuses[username]["status"] = new_youtube_status
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(username)
+                            youtube_live_statuses[username]["status"] = new_status
                 
                 if TWITCH_TARGET_USERNAMES:
                     for username in TWITCH_TARGET_USERNAMES:
-                        new_twitch_status, twitch_name = check_twitch_live(username)
-                        old_twitch_status = twitch_live_statuses[username]["status"]
+                        new_status, twitch_name = check_twitch_live(username)
+                        old_status = twitch_live_statuses[username]["status"]
+                        if twitch_name: twitch_live_statuses[username]["name"] = twitch_name
                         
-                        if twitch_name:
-                            twitch_live_statuses[username]["name"] = twitch_name
-                        
-                        if new_twitch_status != old_twitch_status:
+                        if new_status != old_status:
                             notif_name = twitch_live_statuses[username]["name"]
-                            if new_twitch_status:
-                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=Config.NOTIF_PLATFORM_TWITCH), SOUND_LIVE_START, url=new_twitch_status)
+                            platform = Config.NOTIF_PLATFORM_TWITCH
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, username, new_status)
                             else:
-                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=Config.NOTIF_PLATFORM_TWITCH), SOUND_LIVE_END)
-                            twitch_live_statuses[username]["status"] = new_twitch_status
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(username)
+                            twitch_live_statuses[username]["status"] = new_status
 
                 if OPENREC_TARGET_USERNAMES:
                     for username in OPENREC_TARGET_USERNAMES:
-                        new_openrec_status, openrec_name = check_openrec_live(username)
-                        old_openrec_status = openrec_live_statuses[username]["status"]
+                        new_status, openrec_name = check_openrec_live(username)
+                        old_status = openrec_live_statuses[username]["status"]
+                        if openrec_name: openrec_live_statuses[username]["name"] = openrec_name
                         
-                        if openrec_name:
-                            openrec_live_statuses[username]["name"] = openrec_name
-                        
-                        if new_openrec_status != old_openrec_status:
+                        if new_status != old_status:
                             notif_name = openrec_live_statuses[username]["name"]
-                            if new_openrec_status:
-                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=Config.NOTIF_PLATFORM_OPENREC), SOUND_LIVE_START, url=new_openrec_status)
+                            platform = Config.NOTIF_PLATFORM_OPENREC
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, username, new_status)
                             else:
-                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=Config.NOTIF_PLATFORM_OPENREC), SOUND_LIVE_END)
-                            openrec_live_statuses[username]["status"] = new_openrec_status
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(username)
+                            openrec_live_statuses[username]["status"] = new_status
 
                 if KICK_TARGET_USERNAMES:
                     for username in KICK_TARGET_USERNAMES:
-                        new_kick_status, kick_name = check_kick_live(username)
-                        old_kick_status = kick_live_statuses[username]["status"]
+                        new_status, kick_name = check_kick_live(username)
+                        old_status = kick_live_statuses[username]["status"]
+                        if kick_name: kick_live_statuses[username]["name"] = kick_name
                         
-                        if kick_name:
-                            kick_live_statuses[username]["name"] = kick_name
-                        
-                        if new_kick_status != old_kick_status:
+                        if new_status != old_status:
                             notif_name = kick_live_statuses[username]["name"]
-                            if new_kick_status:
-                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=Config.NOTIF_PLATFORM_KICK), SOUND_LIVE_START, url=new_kick_status)
+                            platform = Config.NOTIF_PLATFORM_KICK
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, username, new_status)
                             else:
-                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=Config.NOTIF_PLATFORM_KICK), SOUND_LIVE_END)
-                            kick_live_statuses[username]["status"] = new_kick_status
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(username)
+                            kick_live_statuses[username]["status"] = new_status
+                
+                if TWITCASTING_TARGET_USERNAMES:
+                    for username in TWITCASTING_TARGET_USERNAMES:
+                        new_status, tc_name = check_twitcasting_live(username)
+                        old_status = twitcasting_live_statuses[username]["status"]
+                        if tc_name: twitcasting_live_statuses[username]["name"] = tc_name
+                        
+                        if new_status != old_status:
+                            notif_name = twitcasting_live_statuses[username]["name"]
+                            platform = Config.NOTIF_PLATFORM_TWITCASTING
+                            if new_status:
+                                send_live_notification(Config.NOTIF_LIVE_START.format(name=notif_name, platform=platform), SOUND_LIVE_START, url=new_status)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: start_recording(platform, username, new_status)
+                            else:
+                                send_live_notification(Config.NOTIF_LIVE_END.format(name=notif_name, platform=platform), SOUND_LIVE_END)
+                                if Config.ENABLE_AUTO_RECORDING and platform in Config.RECORDING_TARGET_PLATFORMS: stop_recording(username)
+                            twitcasting_live_statuses[username]["status"] = new_status
 
             is_any_streamer_live = False
             if any(s["status"] for s in tiktok_live_statuses.values()): is_any_streamer_live = True
@@ -990,6 +1092,7 @@ def main():
             if not is_any_streamer_live and any(s["status"] for s in twitch_live_statuses.values()): is_any_streamer_live = True
             if not is_any_streamer_live and any(s["status"] for s in openrec_live_statuses.values()): is_any_streamer_live = True
             if not is_any_streamer_live and any(s["status"] for s in kick_live_statuses.values()): is_any_streamer_live = True
+            if not is_any_streamer_live and any(s["status"] for s in twitcasting_live_statuses.values()): is_any_streamer_live = True
 
             if X_TARGET_URLS:
                 print(f"\n{Config.CONSOLE_X_CYCLE}")
@@ -1019,7 +1122,13 @@ def main():
                 for username, info in tiktok_live_statuses.items():
                     tiktok_formatted_name = f"{info['name']} (@{username})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} TikTok: {tiktok_formatted_name}")
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_TIKTOK
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            username in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} TikTok: {tiktok_formatted_name}{recording_status}")
                     else:
                         print(f"{Config.CONSOLE_OFF_PREFIX} TikTok: {tiktok_formatted_name}")
 
@@ -1027,7 +1136,13 @@ def main():
                 for user_id, info in niconico_live_statuses.items():
                     niconico_formatted_name = f"{info['name']} (ID: {user_id})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} Nico Live: {niconico_formatted_name}")
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_NICONICO
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            user_id in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} Nico Live: {niconico_formatted_name}{recording_status}")
                     else:
                         print(f"{Config.CONSOLE_OFF_PREFIX} Nico Live: {niconico_formatted_name}")
             
@@ -1035,7 +1150,13 @@ def main():
                 for username, info in youtube_live_statuses.items():
                     yt_formatted_name = f"{info['name']} (@{username})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} YouTube: {yt_formatted_name}")
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_YOUTUBE
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            username in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} YouTube: {yt_formatted_name}{recording_status}")
                     else:
                         print(f"{Config.CONSOLE_OFF_PREFIX} YouTube: {yt_formatted_name}")
             
@@ -1043,7 +1164,13 @@ def main():
                 for username, info in twitch_live_statuses.items():
                     twitch_formatted_name = f"{info['name']} (@{username})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} Twitch: {twitch_formatted_name}")
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_TWITCH
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            username in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} Twitch: {twitch_formatted_name}{recording_status}")
                     else:
                         print(f"{Config.CONSOLE_OFF_PREFIX} Twitch: {twitch_formatted_name}")
 
@@ -1051,7 +1178,13 @@ def main():
                 for username, info in openrec_live_statuses.items():
                     openrec_formatted_name = f"{info['name']} (@{username})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} Openrec: {openrec_formatted_name}")
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_OPENREC
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            username in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} Openrec: {openrec_formatted_name}{recording_status}")
                     else:
                         print(f"{Config.CONSOLE_OFF_PREFIX} Openrec: {openrec_formatted_name}")
 
@@ -1059,9 +1192,29 @@ def main():
                 for username, info in kick_live_statuses.items():
                     kick_formatted_name = f"{info['name']} (@{username})"
                     if info["status"]:
-                        print(f"{Config.CONSOLE_LIVE_PREFIX} Kick: {kick_formatted_name}")
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_KICK
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            username in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} Kick: {kick_formatted_name}{recording_status}")
                     else:
                         print(f"{Config.CONSOLE_OFF_PREFIX} Kick: {kick_formatted_name}")
+            
+            if TWITCASTING_TARGET_USERNAMES:
+                for username, info in twitcasting_live_statuses.items():
+                    twitcasting_formatted_name = f"{info['name']} (@{username})"
+                    if info["status"]:
+                        recording_status = ""
+                        platform_name = Config.NOTIF_PLATFORM_TWITCASTING
+                        if (Config.ENABLE_AUTO_RECORDING and 
+                            platform_name in Config.RECORDING_TARGET_PLATFORMS and 
+                            username in recording_processes):
+                            recording_status = f" ({Colors.RED}RECORDING{Colors.END})"
+                        print(f"{Config.CONSOLE_LIVE_PREFIX} TwitCasting: {twitcasting_formatted_name}{recording_status}")
+                    else:
+                        print(f"{Config.CONSOLE_OFF_PREFIX} TwitCasting: {twitcasting_formatted_name}")
 
             if X_TARGET_URLS:
                 print("---------------------------------")
@@ -1084,6 +1237,13 @@ def main():
 
     except KeyboardInterrupt:
         print(Config.CONSOLE_SHUTDOWN)
+        
+        if Config.ENABLE_AUTO_RECORDING:
+            print("Stopping all active recordings...")
+            active_recordings = list(recording_processes.keys())
+            for identifier in active_recordings:
+                stop_recording(identifier)
+        
         save_cache(cache)
         print(Config.CONSOLE_CACHE_SAVED)
         write_log(Config.LOG_SHUTDOWN)
